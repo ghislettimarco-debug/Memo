@@ -1,0 +1,48 @@
+name: Build Android APK
+
+# Il processo si avvia quando fai un push su "main" o manualmente dal sito
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: 
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: ☕ Setup Java 17 (Richiesto per Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 📦 Installazione Dipendenze
+        run: npm install
+
+      - name: 🚀 Creazione Progetto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: 🛠️ Compilazione APK (Debug)
+        working-directory: ./android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: 📤 Caricamento APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MemoCorsi-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
